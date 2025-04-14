@@ -28,6 +28,13 @@ app.post('/usuarios', async (req, res) => {
 // app.delete um usuario
 // app.put edita um usuario
 app.get('/usuarios', async (req, res) => {
+
+    app.get('/', (req, res) => {
+        res.send('API de Usuários está funcionando 🚀');
+      });
+      
+
+    res.send('API está funcionando!');
     let users = []
 
     if (req.query.id) { // Se um id for fornecido na query string
@@ -105,10 +112,11 @@ app.delete('/usuarios/:id', async (req, res) => {
 
 })
 
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 10000; // Usa a porta fornecida pelo Render ou 10000 como fallback
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`)
-})
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
+
 
 
 /*
