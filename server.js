@@ -1,140 +1,132 @@
-import express from 'express'
-import cors from 'cors'
-import { PrismaClient } from '@prisma/client'
+import express from 'express';
+import cors from 'cors';
+import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
-const app = express()
-app.use(express.json()) //dizendo para o express que vou usar json
-app.use(cors())
+const app = express();
 
+// Configuração do CORS para permitir requisições da origem específica
+app.use(cors({
+  origin: 'https://front-end-api-mu.vercel.app', // substitua pela sua URL de frontend
+}));
 
+app.use(express.json()); // Permitindo que o Express interprete JSON
+
+// Rota POST para criar um novo usuário
 app.post('/usuarios', async (req, res) => {
+  try {
+    const { email, name, age } = req.body;
 
-    await prisma.user.create({
-        data: {
-            email: req.body.email,
-            name: req.body.name,
-            age: req.body.age
+    const newUser = await prisma.user.create({
+      data: {
+        email,
+        name,
+        age,
+      },
+    });
 
-        }
-
-    })
-
-    res.status(201).json(req.body)
-
-})
-// app.post cria um novo usuario
-// app.delete um usuario
-// app.put edita um usuario
-app.get('https://api-cadastro-usuario-74h8.onrender.com/usuarios', async (req, res) => {
-
-    app.get('/', (req, res) => {
-        res.send('API de Usuários está funcionando 🚀');
-      });
-      
-
-    res.send('API está funcionando!');
-    let users = []
-
-    if (req.query.id) { // Se um id for fornecido na query string
-        const user = await prisma.user.findUnique({
-            where: {
-                id: req.query.id, // Buscar usuário pelo id
-            }
-        })
-
-        if (user) {
-            return res.status(200).json(user) // Retornar o usuário encontrado
-        } else {
-            return res.status(404).json({ error: 'Usuário não encontrado' }) // Caso o usuário não exista
-        }
-    }
-
-    if (req.query.name || req.query.email || req.query.age) {
-        // Caso haja parâmetros de consulta específicos, você pode filtrar com base nisso
-        users = await prisma.user.findMany({
-            where: {
-                name: req.query.name,
-                email: req.query.email,
-                age: req.query.age
-            },
-        })
-        return res.status(200).json(users) // Retorna os usuários filtrados
-    }
-
-    // Caso nenhum filtro seja fornecido, retornar todos os usuários
-    users = await prisma.user.findMany()
-    res.status(200).json(users)
-})
-
-app.put('https://api-cadastro-usuario-74h8.onrender.com/usuarios:id', async (req, res) => {
-    try {
-        // Primeiro, verificamos se o usuário existe
-        const user = await prisma.user.findUnique({
-            where: { id: req.params.id }
-        });
-
-        if (!user) {
-            return res.status(404).json({ error: 'Usuário não encontrado' });
-        }
-
-        // Agora, atualizamos os dados do usuário
-        const updatedUser = await prisma.user.update({
-            where: { id: req.params.id },
-            data: {
-                email: req.body.email,
-                name: req.body.name,
-                age: req.body.age,
-            }
-        });
-
-        // Retorna o usuário atualizado
-        res.status(200).json(updatedUser);
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Erro ao atualizar o usuário' });
-    }
+    res.status(201).json(newUser); // Retorna o usuário recém-criado
+  } catch (error) {
+    console.error('Erro ao criar usuário:', error);
+    res.status(500).json({ error: 'Erro ao criar usuário' });
+  }
 });
 
+// Rota GET para listar os usuários
+app.get('/usuarios', async (req, res) => {
+  try {
+    let users = [];
 
-app.delete('https://api-cadastro-usuario-74h8.onrender.com/usuarios:id', async (req, res) => {
+    // Caso tenha um id na query string, buscamos esse usuário específico
+    if (req.query.id) {
+      const user = await prisma.user.findUnique({
+        where: {
+          id: parseInt(req.query.id), // Converte para inteiro
+        },
+      });
+
+      if (user) {
+        return res.status(200).json(user); // Retorna o usuário encontrado
+      } else {
+        return res.status(404).json({ error: 'Usuário não encontrado' });
+      }
+    }
+
+    // Caso haja filtros de name, email ou age na query string
+    if (req.query.name || req.query.email || req.query.age) {
+      users = await prisma.user.findMany({
+        where: {
+          name: req.query.name,
+          email: req.query.email,
+          age: parseInt(req.query.age), // Converte a idade para número
+        },
+      });
+
+      return res.status(200).json(users); // Retorna os usuários filtrados
+    }
+
+    // Caso não haja filtros, retornamos todos os usuários
+    users = await prisma.user.findMany();
+    res.status(200).json(users);
+  } catch (error) {
+    console.error('Erro ao listar usuários:', error);
+    res.status(500).json({ error: 'Erro ao listar usuários' });
+  }
+});
+
+// Rota PUT para editar um usuário
+app.put('/usuarios/:id', async (req, res) => {
+  try {
+    const { email, name, age } = req.body;
+    const { id } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(id) }, // Converte para inteiro
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: parseInt(id) }, // Converte para inteiro
+      data: { email, name, age },
+    });
+
+    res.status(200).json(updatedUser); // Retorna o usuário atualizado
+  } catch (error) {
+    console.error('Erro ao atualizar usuário:', error);
+    res.status(500).json({ error: 'Erro ao atualizar usuário' });
+  }
+});
+
+// Rota DELETE para excluir um usuário
+app.delete('/usuarios/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
 
     await prisma.user.delete({
-        where: {
-            id: req.params.id
-        },
+      where: { id: parseInt(id) },
+    });
 
-    })
+    res.status(200).json({ message: 'Usuário deletado com sucesso' });
+  } catch (error) {
+    console.error('Erro ao deletar usuário:', error);
+    res.status(500).json({ error: 'Erro ao deletar usuário' });
+  }
+});
 
-    res.status(200).json({ message: 'Usuario Deletado com sucesso' })
-
-})
-
-const PORT = process.env.PORT || 10000; // Usa a porta fornecida pelo Render ou 10000 como fallback
+// Inicializa o servidor na porta definida (usando a variável de ambiente ou 10000 como fallback)
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
-
-
-
-/*
-    Criar nossa API de usuarios
-   -Criar um usuario
-    - Listar todos os Usuarios
-    -Editar um usuario
-    -Deletar um usuario
-   
-
-
-    HTTP/STATUS
-    2XX SUCESSO
-    4XX ERRO NO CODIGO 
-    5XX ERRO NO SERVER
-    // caiotompero:54vNZZywycqoClEK
-    
-
-
-
-*/
