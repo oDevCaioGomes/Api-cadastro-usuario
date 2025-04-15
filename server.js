@@ -27,7 +27,7 @@ app.post('/usuarios', async (req, res) => {
 // app.post cria um novo usuario
 // app.delete um usuario
 // app.put edita um usuario
-app.get('/usuarios', async (req, res) => {
+app.get('https://api-cadastro-usuario-74h8.onrender.com/usuarios', async (req, res) => {
 
     app.get('/', (req, res) => {
         res.send('API de Usuários está funcionando 🚀');
@@ -68,7 +68,7 @@ app.get('/usuarios', async (req, res) => {
     res.status(200).json(users)
 })
 
-app.put('/usuarios/:id', async (req, res) => {
+app.put('https://api-cadastro-usuario-74h8.onrender.com/usuarios:id', async (req, res) => {
     try {
         // Primeiro, verificamos se o usuário existe
         const user = await prisma.user.findUnique({
@@ -99,7 +99,7 @@ app.put('/usuarios/:id', async (req, res) => {
 });
 
 
-app.delete('/usuarios/:id', async (req, res) => {
+app.delete('https://api-cadastro-usuario-74h8.onrender.com/usuarios:id', async (req, res) => {
 
     await prisma.user.delete({
         where: {
